@@ -1,0 +1,184 @@
+1 - Instalar uma aplicação laravel a partir do SAIL
+      curs -s https://laravel.build/modulo-2 | bash
+      
+2 -  Exxecutar a aplicação com o comando:
+      ./vendor/bin/sail up -d
+      
+2 -  Acessar a aplicação via browser:
+      http://localhost:8080 OU http://127.0.0.1:8080 (8080 é a porta definida na variável de ambiente APP_PORT=8080 no arquivo .env da aplicação)
+
+2 - Executar o comando abaixo para parar o container
+      ./vendor/bin/sail down
+
+
+2 - Ver que serviços foram interrompidos por causa de portas já utilizando as portas existentes como comando:
+      marcio@vaio:~/projetosdocker/modulo-2$ sudo netstat -nlpt |grep 80(80 é o número da porta que se deseja ver o uso em outras aplicações)
+      OU
+      marcio@vaio:~/projetosdocker/modulo-2$ sudo netstat -nlpt 6379(idem)
+
+
+2 - Depois de instalado
+      a) parar o servico mysql com o comando abaixo, pois o mesmo já está sento utilizado em sua maquina localmente, visto que o mesmo está instalado localmente.
+            marcio@vaio:~/projetosdocker/modulo-2$ sudo service mysql stop
+
+3 -  Alterar a permissão de Leitura e Escrita nas pastas recursivamente
+      marcio@vaio:~/projetosdocker/modulo-2$ sudo chmod 777 -R ./
+
+
+5 - Executar a migration mas primeiro, rodar: ./vendor/bin/sail up -d
+       marcio@vaio:~/projetosdocker/modulo-2$ ./vendor/bin/sail artisan migrate
+
+Obs: Caso o problema das portas já em uso e a questão das permissões surja, acrescente as seguintes entradass no arquivo .env
+#Adicionado por mim
+APP_PORT=8080
+#Adicionado por mim
+FORWARD_DB_PORT=33066
+#Adicionado por mim
+FORWARD_REDIS_PORT=6380
+#Adicionado por mim
+WWWGROUP=1000
+WWWUSER=1000
+
+Comandos
+./vendor/bin/sail artisan make:model Food --migration
+
+Instalando ou pacote de autenticação
+./vendor/bin/sail composer require laravel/breeze --dev
+./vendor/bin/sail artisan breeeze:install
+
+./vendor/bin/sail artisan migrate:fresh
+
+Configurações para ver o seu bando de dados no mysqlworkbranch
+No arquivo .env, trocar: DB_HOST=mysql por DB_HOST=127.0.0.1
+No workbranch, crie uma nova conexão com as seguintes credenciais (Obs, veja que as credenciais, são obtidas a partir das configurações do bando de dados no arquivo .env
+DB_CONNECTION=mysql
+#DB_HOST=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+FORWARD_DB_PORT=33066
+DB_DATABASE=laravel
+DB_USERNAME=sail
+DB_PASSWORD=password
+
+Logo no MySQLWorkBranch, fica:
+Connection Method: Standard(TCP/IP)
+Na aba Parameters
+      Hostname: 127.0.0.1 ou localhost
+      port: 33066
+      Username: sail
+      Password: password
+      DefaultSchema: Deixar este input em branco
+
+Click no botão: Test Connection, depois feche
+
+
+Criando um CONTROLLER
+./vendor/bin/sail artisan make:controller NomedaminhaController
+
+
+Caso dê algum erro relacionado a sql error danied DB_USER, mude o nome do usuário no banco de sail para root. Veja site de referência
+https://laracasts.com/discuss/channels/code-review/access-denied-for-user-sail-at-to-database
+"
+DR Para um contêiner totalmente novo (por exemplo, após um primeiro clone), certifique-se de que .env esteja configurado antes de navegar! Caso contrário, ele será criado sem as informações de login que você acha que configurou em .env. Se você estragou tudo como eu, pare o container, exclua o container e os volumes, mas você pode manter as imagens, depois de configurar .env, navegue novamente e o container será construído com sua configuração .env.
+"
+Apagar um volume para recriar o banco e dados do zero
+./vendor/bin/sail down -v
+
+
+Resolver problema do: Vite manifest not found at: /var/www/html/public/build/manifest.json
+./vendor/bin/sail npm install
+./vendor/bin/sail npm run dev
+./vendor/bin/sail artisan migrate
+
+
+Credenciais aplicação Laravel Sail: username: marcio@seati.ma.gov.br senha: senha@123
+
+
+
+Qual a diferença entre fazer $request->validate ou usar um Validator::make ?
+
+O validate é mais pratico pois ele ja faz todo o processo de validação, aceitar e responder a request, com o Validator::make voce esta usando uma instancia do validator e vai precisar tratar todo o processo, é util quando voce quer dar uma resposta customizada da validação ou ate mesmo tratar algo quando a validação falha, segue um exemplo de uso do make
+
+$validator = Validator::make($request->all(), [
+'title' => 'required|unique:posts|max:255',
+'body' => 'required',
+]);
+
+if ($validator->fails()) {
+return redirect('post/create')
+->withErrors($validator)
+->withInput();
+}
+
+Criando Migrations
+      ./vendor/bin/sail artisan make:migrations create_clients_table
+Criando a Model juntamente com a Migration
+      ./vendor/bin/sail artisan make:model Client --migration
+Criando as tabelas no banco de dados
+      ./vendor/bin/sail artisan migrate
+      ./vendor/bin/sail artisan migrate fresh
+
+Laravel Breeze -
+      Baixando:
+            ./vendor/bin/sail composer require laravel/breeze --dev
+      Instalando:
+            ./vendor/bin/sail artisan breeze:install
+
+
+Para resolver problema de ownership dubios ao inicializar o git, digite:
+      git config --global --add safe.directory /home/marcio/projetosdocker/modulo-2
+      depois
+      git add .
+      git commit -m "Primeiro Commit"
+
+Para clonar o repositório em uma maquina
+	git clone https://github.com/marcio72vieira/especialista_modulo2.git
+
+Para atualizar o projeto depois de clonado
+	composer update
+
+Copiar arquivo
+	.env.enxempla para .env
+Gerar chave:
+	./vendor/bin/sail artisan key:generate
+
+
+Passos para clonar um repositório do github
+1 - Entrar na pasta de projetos:
+	marcio@marcio72:~/projetosdocker$
+2 - Clonar o projeto a partir do GitHub
+	git clone https://github.com/marcio72vieira/especialista_modulo2.git
+3 - Entrar na pasta do projeto clonado
+	cd especialista_modulo2/
+4 - Criar o arquivo .env a partir do arquivo .env.example
+	cp .env.example .env
+5 - Alterar as permissões de escritas nas pastas
+	sudo chmod 775 -R ./
+6 - Abrir o projeto com VSCode (deve-se está dentro da pasta do proejeto criado/clonado)
+	code .
+7 - Atualizar o projeto para que sejam baixadas todas as dependências
+	composer update
+8 - No arquivo .env
+	Gerar uma chave para a aplicação ou copiar de uma outra aplicação laravel
+		APP_KEY=base64:WCydwLvrT6e0uACubUnJ+Hj3JKP3/YAOfgmCQ0z+F7M=
+	Configura a porta para a aplicação adicionando a chave abaixo (evita o erro de porta já em uso)
+		APP_PORT=8080
+	Definir as configurações do banco MySQL conforme abaixo
+		DB_CONNECTION=mysql
+		DB_HOST=mysql
+		DB_PORT=3306
+		FORWARD_DB_PORT=33066 (evita o erro de porta já em uso)
+		DB_DATABASE=modulo2
+		DB_USERNAME=sail
+		DB_PASSWORD=password
+9 - Executar as migrations padrões, para evitar o erro:
+	Erro:	SQLSTATE[HY000] [1045] Access denied for user 'sail'@'172.31.0.7' (using password: YES)
+		select * from `sessions` where `id` = dc9fyMBIeImsdAfS581EX7peZws9YQuwy12JwSI9 limit 1
+
+	Comando para rodar migration
+		./vendor/bin/sail artisan migrate
+
+
+
+
+
