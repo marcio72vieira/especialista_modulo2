@@ -91,7 +91,7 @@ Resolver problema do: Vite manifest not found at: /var/www/html/public/build/man
 ./vendor/bin/sail artisan migrate
 
 
-Credenciais aplicação Laravel Sail: username: marcio@seati.ma.gov.br senha: senha@123
+Credenciais aplicação Laravel Sail: username: marcio@email.com.br senha: senha@123
 
 
 
@@ -135,7 +135,19 @@ Para clonar o repositório em uma maquina
 	git clone https://github.com/marcio72vieira/especialista_modulo2.git
 
 Para atualizar o projeto depois de clonado
-	composer update
+	composer update ou composer install
+
+Obs: npm run dev deve ser executado depois do ./vendor/bin/sail up -da
+Obs: Ao definir um enum, é necessário "tipá-lo" para evitar o erro (Case ACTIVED of non-backed enum App\Enums\SignatureStatus must not have a value):
+    <?php
+
+    namespace App\Enum;
+
+    enum SignatureStatus: int
+    {
+        case ACTIVED =  1;
+        case DEACTIVED = 2
+    }
 
 Copiar arquivo
 	.env.enxempla para .env
@@ -180,5 +192,51 @@ Passos para clonar um repositório do github
 
 
 
+Acrescentando dados com Relacionamentos:
+Route::get('/test', function(){
+
+    $client = Auth::user()->client()->create([
+        'document' => '00020202001',
+        'birthdate' => '1990-07-20'
+    ]);
+
+    $plan = Plan::create([
+        'name' => 'Last Plan',
+        'short_description' => 'A terrible plan',
+        'price' => 2990
+    ]);
+
+    $client->signatures()->create([
+        'plan_id' => $plan->id,
+        'status' => SignatureStatus::SUSPENDED
+    ]);
 
 
+    return "Olá pessoal!";
+});
+
+
+
+Manipulando dados dentro da própria BLADE
+Traz uma collection (Neste ponto, pode-se usar várias métodos para se trabalhar com collections)
+<li>Status da Assinatura: {{ dd(auth()->user()->client->signatures) }}</li>
+Traz o status normalmente, mas o [0], não fica "legal"
+<li>Status da Assinatura: {{ dd(auth()->user()->client->signatures[0]->status) }}</li>
+Agora, com find() eu posso trazer apenas um objeto da minha lista, que pode ter 0 ou mais objetos
+<li>Status da Assinatura: {{ dd(auth()->user()->client->signatures->first()->status) }}</li>
+Neste ponto eu trago o valor do status no banco
+<li>Status da Assinatura: {{ auth()->user()->client->signatures->first()->status }}</li>
+Neste ponto eu trago o nome que está no case do enum: SignatureStatus
+<li>Status da Assinatura: {{ auth()->user()->client->signatures->first()->status->name }}</li>
+Resumindo
+    <ul>
+        <li>Name: {{ auth()->user()->name }}</li>
+        <li>Documento: {{ auth()->user()->client->document }}</li>
+        <li>Status da Assinatura: {{ auth()->user()->client->signatures->first()->status->name }}</li>
+    </ul>
+Agora acessando o Model diretamente, sem o Auth()
+<ul>
+    <li>Name: {{ auth()->user()->name }}</li>
+    <li>Documento: {{ App\Models\Client::where('user_id', auth()->user()->id)->first()->document }}</li>
+    <li>Status da Assinatura: {{ auth()->user()->client->signatures->first()->status->name }}</li>
+</ul>
